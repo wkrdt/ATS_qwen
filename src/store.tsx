@@ -17,6 +17,9 @@ const LS_DB = "talentledger.db.v1";
 const LS_SETTINGS = "talentledger.settings.v1";
 const MAX_ACTIVITY = 60;
 
+// Embedded Google Sheet URL from environment variable (if available)
+const EMBEDDED_SHEET_URL = import.meta.env.ATS_sheet || "";
+
 export type SyncState = "local" | "connected" | "syncing" | "error";
 
 export interface Toast {
@@ -122,6 +125,10 @@ function loadSettings(): Settings {
     }
   } catch {
     /* ignore */
+  }
+  // If an embedded sheet URL is provided via environment variable, use it as default
+  if (EMBEDDED_SHEET_URL) {
+    return { sheetUrl: EMBEDDED_SHEET_URL, connected: true, lastSyncAt: null };
   }
   return { sheetUrl: "", connected: false, lastSyncAt: null };
 }
