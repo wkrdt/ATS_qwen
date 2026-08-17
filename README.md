@@ -2,7 +2,7 @@
 
 A compact applicant tracking system for an **independent hiring consultant** handling a boutique
 volume of mandates (<10 positions/month). Built with React + Vite + TypeScript + Tailwind, backed by
-**Google Sheets** via a **Google Apps Script** web app.
+**Google Sheets** via a **Google Apps Script** web app. tes push
 
 ```
 src/          → the web app (React frontend)
