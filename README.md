@@ -66,6 +66,32 @@ npm run dev      # start the dev server
 npm run build    # production build (output in dist/)
 ```
 
+## 3b · Publish on GitHub Pages (automatic)
+
+Yes — the built app is fully static, so Pages hosts it directly. The repo includes a workflow at
+`.github/workflows/deploy.yml` that builds and publishes on **every push**:
+
+1. **Get the workflow file into the repo.** The web uploader skips hidden folders, so create it
+   manually: *Add file → Create new file*, type the filename exactly as
+   `.github/workflows/deploy.yml`, paste its content, **Commit**.
+2. **Turn Pages on:** repo **Settings → Pages** (left menu) → *Build and deployment → Source:*
+   choose **GitHub Actions**.
+3. Push any change (or use *Actions → Deploy to GitHub Pages → Run workflow*).
+4. After ~1–2 minutes the site is live at:
+
+   ```
+   https://<your-username>.github.io/<repo-name>/
+   ```
+
+Notes:
+
+- The workflow builds with `--base=./`, so it works for **any repo name** — no `vite.config` edits.
+- The app talks to **your** Google Sheet from the Pages URL (Apps Script allows cross-origin
+  calls from static hosts). The Sheet URL stays in each visitor's browser (localStorage) — nothing
+  sensitive is committed, and each person connects their own sheet via **Sheets sync**.
+- Want one shared database for a whole team? Everyone pastes the **same** Apps Script `/exec` URL
+  into their browser — the Sheet becomes the shared source of truth.
+
 ## 4 · Set up the Google Sheets backend
 
 1. Create a new Google Sheet (name it anything, e.g. `TalentLedger DB`).
