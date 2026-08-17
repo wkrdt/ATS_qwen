@@ -2,16 +2,21 @@
 # Build artifacts
 dist/
 build/
+*.o
+*.obj
+*.out
 
 # Dependencies
 node_modules/
+venv/
+.venv/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+target/
+.gradle/
 
-# Environment
-.env
-.env.local
-*.env.*
-
-# Editor/IDE
+# Editor/IDE files
 .vscode/
 .idea/
 *.swp
@@ -21,23 +26,17 @@ node_modules/
 # Logs
 *.log
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+# Environment
+.env
+.env.local
+*.env.*
 
 # Coverage
 coverage/
 htmlcov/
 .coverage
 
-# Distribution / packaging
-*.tar.gz
-*.whl
-*.egg-info/
-
-# OS generated files
+# System files
 .DS_Store
 Thumbs.db
 ```
