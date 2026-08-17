@@ -197,9 +197,6 @@ export function SlideOver({
   if (open) cacheRef.current = { kicker, title, children, footer };
   const c = cacheRef.current;
   
-  /* don't render anything if closed and no cached content */
-  if (!c) return null;
-
   /* after close, clear cache once animation finishes (300ms) */
   useEffect(() => {
     if (!open) {
@@ -207,6 +204,9 @@ export function SlideOver({
       return () => clearTimeout(timer);
     }
   }, [open]);
+
+  /* don't render anything if closed and no cached content */
+  if (!c) return null;
 
   return (
     <div className={`fixed inset-0 z-50 ${open ? "" : "pointer-events-none"}`} aria-hidden={!open}>
