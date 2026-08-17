@@ -195,7 +195,10 @@ export function SlideOver({
   /* keep last-opened content mounted so the panel doesn't empty mid-slide-out */
   const cacheRef = useRef<{ kicker: string; title: string; children: React.ReactNode; footer?: React.ReactNode } | null>(null);
   if (open) cacheRef.current = { kicker, title, children, footer };
-  const c = cacheRef.current ?? { kicker, title, children, footer };
+  const c = cacheRef.current;
+  
+  /* don't render anything if closed and no cached content */
+  if (!c) return null;
 
   return (
     <div className={`fixed inset-0 z-50 ${open ? "" : "pointer-events-none"}`} aria-hidden={!open}>
