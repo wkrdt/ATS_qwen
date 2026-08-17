@@ -192,35 +192,48 @@ export function SlideOver({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  /* keep last-opened content mounted so the panel doesn't empty mid-slide-out */
-  const cacheRef = useRef<{ kicker: string; title: string; children: React.ReactNode; footer?: React.ReactNode } | null>(null);
-  if (open) cacheRef.current = { kicker, title, children, footer };
-  const c = cacheRef.current;
+  /* track closing state for exit animation */
+  const [isClosing, setIsClosing] = useState(false);
+  const contentRef = useRef<{ kicker: string; title: string; children: React.ReactNode; footer?: React.ReactNode } | null>(null);
   
-  /* after close, clear cache once animation finishes (300ms) */
+  /* update content when open */
+  if (open) {
+    setIsClosing(false);
+    contentRef.current = { kicker, title, children, footer };
+  }
+  
+  /* handle close with animation */
   useEffect(() => {
     if (!open) {
-      const timer = setTimeout(() => { cacheRef.current = null; }, 300);
+      setIsClosing(true);
+      const timer = setTimeout(() => {
+        setIsClosing(false);
+        contentRef.current = null;
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [open]);
 
-  /* don't render anything if closed and no cached content */
+  const c = contentRef.current;
+
+  /* don't render anything if no content */
   if (!c) return null;
 
+  const isOpen = open || isClosing;
+
   return (
-    <div className={`fixed inset-0 z-50 ${open ? "" : "pointer-events-none"}`} aria-hidden={!open}>
+    <div className={`fixed inset-0 z-50 ${isOpen ? "" : "pointer-events-none"}`} aria-hidden={!isOpen}>
       <div
         onClick={onClose}
         className={`absolute inset-0 bg-pine-950/45 backdrop-blur-[2px] transition-opacity duration-300 ${
-          open ? "opacity-100" : "opacity-0"
+          isOpen ? "opacity-100" : "opacity-0"
         }`}
       />
       <div
         role="dialog"
         aria-modal="true"
         className={`absolute inset-y-0 right-0 flex w-full max-w-[460px] flex-col border-l border-line bg-paper shadow-pop transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          open ? "translate-x-0" : "translate-x-full"
+          isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="flex items-start justify-between gap-4 border-b border-line bg-card px-6 py-5">
