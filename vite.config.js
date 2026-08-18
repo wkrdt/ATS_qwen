@@ -12,4 +12,8 @@ export default defineConfig({
       port: 3000,
     },
   },
+  define: {
+    // Embed the ATS_sheet environment variable at build time
+    "import.meta.env.ATS_sheet": JSON.stringify(process.env.ATS_sheet || ""),
+  },
 });
