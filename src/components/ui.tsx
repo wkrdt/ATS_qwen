@@ -192,62 +192,31 @@ export function SlideOver({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  /* track closing state for exit animation */
-  const [isClosing, setIsClosing] = useState(false);
-  const contentRef = useRef<{ kicker: string; title: string; children: React.ReactNode; footer?: React.ReactNode } | null>(null);
-  
-  /* update content when open */
-  if (open) {
-    setIsClosing(false);
-    contentRef.current = { kicker, title, children, footer };
-  }
-  
-  /* handle close with animation */
-  useEffect(() => {
-    if (!open) {
-      setIsClosing(true);
-      const timer = setTimeout(() => {
-        setIsClosing(false);
-        contentRef.current = null;
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [open]);
-
-  const c = contentRef.current;
-
-  /* don't render anything if no content */
-  if (!c) return null;
-
-  const isOpen = open || isClosing;
+  if (!open) return null;
 
   return (
-    <div className={`fixed inset-0 z-50 ${isOpen ? "" : "pointer-events-none"}`} aria-hidden={!isOpen}>
+    <div className="fixed inset-0 z-50" aria-hidden={!open}>
       <div
         onClick={onClose}
-        className={`absolute inset-0 bg-pine-950/45 backdrop-blur-[2px] transition-opacity duration-300 ${
-          isOpen ? "opacity-100" : "opacity-0"
-        }`}
+        className="absolute inset-0 bg-pine-950/45 backdrop-blur-[2px] transition-opacity duration-300 opacity-100"
       />
       <div
         role="dialog"
         aria-modal="true"
-        className={`absolute inset-y-0 right-0 flex w-full max-w-[460px] flex-col border-l border-line bg-paper shadow-pop transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        className="absolute inset-y-0 right-0 flex w-full max-w-[460px] flex-col border-l border-line bg-paper shadow-pop transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] translate-x-0"
       >
         <div className="flex items-start justify-between gap-4 border-b border-line bg-card px-6 py-5">
           <div>
-            <p className="font-mono text-[11px] font-medium tracking-[0.14em] text-gold-600 uppercase">{c.kicker}</p>
-            <h2 className="font-display mt-1 text-xl font-bold text-ink">{c.title}</h2>
+            <p className="font-mono text-[11px] font-medium tracking-[0.14em] text-gold-600 uppercase">{kicker}</p>
+            <h2 className="font-display mt-1 text-xl font-bold text-ink">{title}</h2>
           </div>
           <IconBtn label="Close panel" onClick={onClose}>
             <IconX size={17} />
           </IconBtn>
         </div>
-        <div className="flex-1 space-y-4 overflow-y-auto px-6 py-5">{c.children}</div>
-        {c.footer ? (
-          <div className="flex items-center justify-end gap-2 border-t border-line bg-card px-6 py-4">{c.footer}</div>
+        <div className="flex-1 space-y-4 overflow-y-auto px-6 py-5">{children}</div>
+        {footer ? (
+          <div className="flex items-center justify-end gap-2 border-t border-line bg-card px-6 py-4">{footer}</div>
         ) : null}
       </div>
     </div>
