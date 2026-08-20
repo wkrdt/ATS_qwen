@@ -1,5 +1,33 @@
 ```
+# Dependencies
+node_modules/
+
 # Build artifacts
 dist/
-build/
+
+# Test coverage and temporary files
+.vite/
+.vitest-cache/
+
+# Environment files
+.env
+.env.local
+*.env.*
+
+# Logs
+*.log
+
+# Editor/IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Package manager
+package-lock.json
 ```
