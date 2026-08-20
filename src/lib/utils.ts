@@ -97,3 +97,45 @@ export function addedThisWeek(items: { createdAt: number }[]): number {
   const cutoff = Date.now() - WEEK;
   return items.filter((i) => i.createdAt >= cutoff).length;
 }
+
+/* ==================== Requisitions Helpers ==================== */
+
+/** Parse ISO date string to timestamp */
+export function parseISODate(iso: string): number {
+  return new Date(iso).getTime();
+}
+
+/** Format full IDR to million IDR display (e.g., 5000000 → "5") */
+export function fmtMillionIDR(amount: number): string {
+  return (amount / 1_000_000).toLocaleString("id-ID", { maximumFractionDigits: 1 });
+}
+
+/** Format full IDR with jt suffix */
+export function fmtIDR(amount: number): string {
+  const million = amount / 1_000_000;
+  return `${million.toLocaleString("id-ID", { maximumFractionDigits: 1 })} jt`;
+}
+
+/** Days until a target date (from now) */
+export function daysUntil(isoDate: string): number {
+  const target = new Date(isoDate).getTime();
+  const now = Date.now();
+  const diff = target - now;
+  return Math.ceil(diff / (24 * 3600 * 1000));
+}
+
+/** Hours since a given timestamp */
+export function hoursSince(ts: number): number {
+  const diff = Date.now() - ts;
+  return Math.floor(diff / (3600 * 1000));
+}
+
+/** Format ISO date to readable string */
+export function fmtISODate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+/** Get enabled phases in order from requisition phase config */
+export function enabledPhases(phases: { code: string; enabled: boolean }[]): string[] {
+  return phases.filter((p) => p.enabled).map((p) => p.code);
+}
