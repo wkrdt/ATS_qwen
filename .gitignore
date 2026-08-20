@@ -1,10 +1,13 @@
 ```
+# Build artifacts
+dist/
+build/
+*.js
+*.css
+
 # Dependencies
 node_modules/
 
-# Compiled/build artifacts
-*.node
-
-# Package lock files
-package-lock.json
+# Package lock
+.package-lock.json
 ```
