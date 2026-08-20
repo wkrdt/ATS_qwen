@@ -1,33 +1,8 @@
 ```
 # Dependencies
 node_modules/
-
 # Build artifacts
 dist/
-
-# Test coverage and temporary files
-.vite/
-.vitest-cache/
-
-# Environment files
-.env
-.env.local
-*.env.*
-
-# Logs
-*.log
-
-# Editor/IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-*.tmp
-
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# Package manager
+# Package lock
 package-lock.json
 ```
