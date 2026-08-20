@@ -43,6 +43,7 @@ export interface RemoteDB {
   Companies: Record<string, unknown>[];
   Positions: Record<string, unknown>[];
   Candidates: Record<string, unknown>[];
+  Contracts: Record<string, unknown>[];
 }
 
 function num(v: unknown): number {
@@ -63,6 +64,8 @@ export async function getAll(url: string): Promise<DB> {
       name: str(r.name),
       address: str(r.address),
       contact: str(r.contact),
+      contactEmail: str(r.contactEmail),
+      contactPhone: str(r.contactPhone),
       website: str(r.website),
       createdAt: num(r.createdAt),
       updatedAt: num(r.updatedAt),
@@ -90,6 +93,17 @@ export async function getAll(url: string): Promise<DB> {
       createdAt: num(r.createdAt),
       updatedAt: num(r.updatedAt),
     })),
+    contracts: (d.Contracts ?? []).map((r) => ({
+      id: str(r.id),
+      companyId: str(r.companyId),
+      documentType: (str(r.documentType) || "Main Contract") as DB["contracts"][number]["documentType"],
+      startDate: num(r.startDate),
+      endDate: num(r.endDate),
+      documentUrl: str(r.documentUrl),
+      notes: str(r.notes),
+      createdAt: num(r.createdAt),
+      updatedAt: num(r.updatedAt),
+    })),
     activity: [],
   };
 }
@@ -97,11 +111,11 @@ export async function getAll(url: string): Promise<DB> {
 export function replaceAll(url: string, db: DB): Promise<Record<string, unknown>> {
   return gsPost(url, {
     action: "replaceAll",
-    data: { Companies: db.companies, Positions: db.positions, Candidates: db.candidates },
+    data: { Companies: db.companies, Positions: db.positions, Candidates: db.candidates, Contracts: db.contracts },
   });
 }
 
-export type SheetName = "Companies" | "Positions" | "Candidates";
+export type SheetName = "Companies" | "Positions" | "Candidates" | "Contracts";
 
 export function upsert(url: string, sheet: SheetName, record: unknown): Promise<Record<string, unknown>> {
   return gsPost(url, { action: "upsert", sheet, record });

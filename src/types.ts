@@ -3,7 +3,23 @@ export interface Company {
   name: string;
   address: string;
   contact: string;
+  contactEmail?: string;
+  contactPhone?: string;
   website: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export type DocumentType = "Main Contract" | "Addendum" | "Revision" | "Extension" | "Other";
+
+export interface Contract {
+  id: string;
+  companyId: string;
+  documentType: DocumentType;
+  startDate: number;
+  endDate: number;
+  documentUrl?: string;
+  notes?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -51,6 +67,7 @@ export interface DB {
   companies: Company[];
   positions: Position[];
   candidates: Candidate[];
+  contracts: Contract[];
   activity: Activity[];
 }
 
