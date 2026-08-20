@@ -18,6 +18,8 @@ import {
   IconUpload,
   IconUser,
   IconX,
+  IconFile,
+  IconAlertCircle,
 } from "../components/icons";
 
 const EMPTY_INPUT: CompanyInput = { name: "", address: "", contact: "", contactEmail: "", contactPhone: "", website: "" };
