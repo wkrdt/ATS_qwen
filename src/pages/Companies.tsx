@@ -9,6 +9,7 @@ import {
   IconGlobe,
   IconMail,
   IconPencil,
+  IconPhone,
   IconPlus,
   IconSearch,
   IconTrash,
@@ -16,7 +17,7 @@ import {
   IconX,
 } from "../components/icons";
 
-const EMPTY_INPUT: CompanyInput = { name: "", address: "", contact: "", website: "" };
+const EMPTY_INPUT: CompanyInput = { name: "", address: "", contact: "", contactEmail: "", contactPhone: "", website: "" };
 
 function CompanyForm({
   initial,
@@ -46,6 +47,8 @@ function CompanyForm({
       name: form.name.trim(),
       address: form.address.trim(),
       contact: form.contact.trim(),
+      contactEmail: form.contactEmail?.trim(),
+      contactPhone: form.contactPhone?.trim(),
       website: form.website.trim() ? normalizeUrl(form.website) ?? "" : "",
     });
   };
@@ -71,6 +74,22 @@ function CompanyForm({
       </Field>
       <Field label="Company contact person" hint="optional">
         <TextInput value={form.contact} onChange={set("contact")} placeholder="Who do you talk to?" />
+      </Field>
+      <Field label="Contact email" hint="optional">
+        <TextInput
+          value={form.contactEmail}
+          onChange={set("contactEmail")}
+          placeholder="email@company.com"
+          inputMode="email"
+        />
+      </Field>
+      <Field label="Contact phone" hint="optional">
+        <TextInput
+          value={form.contactPhone}
+          onChange={set("contactPhone")}
+          placeholder="+1 (555) 123-4567"
+          inputMode="tel"
+        />
       </Field>
       <Field label="Company page" error={errors.website} hint="web page of the company">
         <TextInput
@@ -219,10 +238,10 @@ export function CompaniesPage() {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-line bg-card shadow-lift">
-          <table className="w-full min-w-[860px] border-collapse text-left text-sm">
+          <table className="w-full min-w-[1100px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-line bg-paper/80">
-                {["Company name", "Company address", "Company contact person", "Company page"].map((h) => (
+                {["Company name", "Company address", "Company contact person", "Contact email", "Contact phone", "Company page"].map((h) => (
                   <th
                     key={h}
                     className="px-5 py-3 font-mono text-[10.5px] font-semibold tracking-[0.13em] text-mist uppercase"
@@ -272,6 +291,32 @@ export function CompaniesPage() {
                         </span>
                         {c.contact}
                       </span>
+                    ) : (
+                      <span className="text-faint">—</span>
+                    )}
+                  </td>
+                  <td className="px-5 py-3.5 align-top">
+                    {c.contactEmail ? (
+                      <a
+                        href={`mailto:${c.contactEmail}`}
+                        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-sea-700 hover:underline"
+                      >
+                        <IconMail size={13} className="shrink-0 opacity-70" />
+                        {c.contactEmail}
+                      </a>
+                    ) : (
+                      <span className="text-faint">—</span>
+                    )}
+                  </td>
+                  <td className="px-5 py-3.5 align-top">
+                    {c.contactPhone ? (
+                      <a
+                        href={`tel:${c.contactPhone}`}
+                        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-sea-700 hover:underline"
+                      >
+                        <IconPhone size={13} className="shrink-0 opacity-70" />
+                        {c.contactPhone}
+                      </a>
                     ) : (
                       <span className="text-faint">—</span>
                     )}
@@ -328,6 +373,8 @@ export function CompaniesPage() {
                 name: panel.company.name,
                 address: panel.company.address,
                 contact: panel.company.contact,
+                contactEmail: panel.company.contactEmail ?? "",
+                contactPhone: panel.company.contactPhone ?? "",
                 website: panel.company.website,
               }}
               submitLabel="Save changes"
