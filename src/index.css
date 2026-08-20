@@ -7,11 +7,36 @@
 
   --color-paper: #f2f1ea;
   --color-card: #fbfaf6;
+  --color-workspace: #e8e6df;
   --color-line: #e0ded1;
   --color-linedark: #d3d1c2;
   --color-ink: #1e2521;
   --color-mist: #5c675f;
   --color-faint: #8f988f;
+
+  --color-moss-50: #f0f4f0;
+  --color-moss-100: #e0e8e0;
+  --color-moss-200: #c5d5c5;
+  --color-moss-300: #9cbf9c;
+  --color-moss-500: #6a9f6a;
+  --color-moss-700: #4a7a4a;
+  --color-moss-800: #3a623a;
+  --color-moss-900: #2d4a2d;
+
+  --color-hono-50: #fef2f2;
+  --color-hono-100: #fee2e2;
+  --color-hono-200: #fecaca;
+  --color-hono-400: #f87171;
+  --color-hono-600: #dc2626;
+  --color-hono-700: #b91c1c;
+  --color-hono-800: #991b1b;
+
+  --color-river-50: #eff6ff;
+  --color-river-100: #dbeafe;
+  --color-river-200: #bfdbfe;
+  --color-river-600: #2563eb;
+  --color-river-700: #1d4ed8;
+  --color-river-800: #1e40af;
 
   --color-pine-50: #f0f7f2;
   --color-pine-100: #deeee4;

@@ -8,7 +8,7 @@ import {
 import {
   IconBuilding, IconCalendar, IconDownload, IconExternal, IconGlobe, IconMail,
   IconPencil, IconPhone, IconPlus, IconSearch, IconTrash, IconUpload, IconUser,
-  IconX, IconFile, IconAlertCircle, IconLock
+  IconX, IconFile, IconAlertCircle, IconLock, IconBuilding2, IconClock
 } from "../components/icons";
 
 const EMPTY_INPUT: CompanyInput = {
