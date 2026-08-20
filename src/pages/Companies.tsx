@@ -1,10 +1,12 @@
 import React, { useMemo, useState } from "react";
-import type { Company } from "../types";
+import type { Company, Contract } from "../types";
 import { useStore, type CompanyInput } from "../store";
 import { fmtDate, hostOf, normalizeUrl, timeAgo } from "../lib/utils";
 import { Avatar, Btn, Chip, EmptyState, Field, IconBtn, Select, SlideOver, TextArea, TextInput } from "../components/ui";
 import {
   IconBuilding,
+  IconCalendar,
+  IconDownload,
   IconExternal,
   IconGlobe,
   IconMail,
@@ -13,6 +15,7 @@ import {
   IconPlus,
   IconSearch,
   IconTrash,
+  IconUpload,
   IconUser,
   IconX,
 } from "../components/icons";
@@ -112,6 +115,60 @@ function CompanyForm({
   );
 }
 
+interface SourcingResource {
+  id: string;
+  name: string;
+  type: string;
+  url: string;
+  companyId: string;
+  account: string;
+  credentialRef: string;
+  status: "ACTIVE" | "PENDING";
+}
+
+const SOURCING_RESOURCES: SourcingResource[] = [
+  {
+    id: "sr-1",
+    name: "LinkedIn Recruiter Seat",
+    type: "Sourcing platform",
+    url: "linkedin.com/recruiter",
+    companyId: "nusa-fintech",
+    account: "raka@tapak.id",
+    credentialRef: "VAULT:ln-recruiter-nusa",
+    status: "ACTIVE",
+  },
+  {
+    id: "sr-2",
+    name: "Glints Employer Account",
+    type: "Job board",
+    url: "glints.com/employer",
+    companyId: "nusa-fintech",
+    account: "talent@nusafintech.co.id",
+    credentialRef: "VAULT:glints-nusa",
+    status: "ACTIVE",
+  },
+  {
+    id: "sr-3",
+    name: "Glints Employer Account",
+    type: "Job board",
+    url: "glints.com/employer",
+    companyId: "samudra-biru",
+    account: "people@samudrabiru.co.id",
+    credentialRef: "VAULT:glints-samudra",
+    status: "PENDING",
+  },
+  {
+    id: "sr-4",
+    name: "JobStreet Posting Credits",
+    type: "Job board",
+    url: "jobstreet.co.id",
+    companyId: "kirana-retail",
+    account: "oscar@kiranaretail.id",
+    credentialRef: "VAULT:js-kirana",
+    status: "ACTIVE",
+  },
+];
+
 export function CompaniesPage() {
   const { db, addCompany, updateCompany, deleteCompany, toast, askConfirm } = useStore();
   const [query, setQuery] = useState("");
@@ -169,6 +226,23 @@ export function CompaniesPage() {
         toast("info", "Client removed", `${c.name} was deleted.`);
       },
     });
+  };
+
+  const getContractForCompany = (companyId: string): Contract | undefined => {
+    return db.contracts.find((ct) => ct.companyId === companyId);
+  };
+
+  const getPositionCounts = (companyId: string) => {
+    const positions = db.positions.filter((p) => p.companyId === companyId);
+    const total = positions.length;
+    const open = positions.filter((p) => p.status === "Open").length;
+    return { total, open };
+  };
+
+  const generateCompanyId = (name: string, index: number): string => {
+    const parts = name.split(" ").filter((w) => w.length > 2);
+    const prefix = parts.length > 0 ? parts[0].slice(0, 3).toUpperCase() : "CLI";
+    return `${prefix}-${String(index + 1).padStart(3, "0")}`;
   };
 
   return (
