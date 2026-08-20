@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import type { ActivityKind, Candidate, Company, Contract, DB, Position, Settings, Stage } from "./types";
+import type { ActivityKind, Candidate, Company, Contract, DB, Position, Settings, Stage, SourcingResource, RecruitmentPhase } from "./types";
 import { mergeById, uid } from "./lib/utils";
 import * as api from "./lib/api";
 import type { SheetName } from "./lib/api";
@@ -44,14 +44,51 @@ export interface CompanyInput {
   contactEmail?: string;
   contactPhone?: string;
   website: string;
+  // PIC details
+  picName?: string;
+  picPosition?: string;
+  picEmail?: string;
+  picPhoneWA?: string;
+  // Contract details
+  contractStart?: number;
+  contractEnd?: number;
+  contractStatus?: Company["contractStatus"];
+  isActive?: boolean;
 }
+
+export interface SourcingResourceInput {
+  companyId: string;
+  resourceName: string;
+  resourceType: string;
+  url: string;
+  accountUsername: string;
+  credentialReference: string;
+  accessStatus: SourcingResource["accessStatus"];
+  notes?: string;
+}
+
 export interface PositionInput {
   companyId: string;
   title: string;
-  type: Position["type"];
+  department?: string;
+  level?: Position["level"];
+  headcount?: number;
+  filledCount?: number;
+  minSalary?: number;
+  maxSalary?: number;
+  employmentType: Position["employmentType"];
+  workLocation?: string;
+  workArrangement?: Position["workArrangement"];
+  targetDate?: number;
+  hiringManagerName?: string;
+  hiringManagerEmail?: string;
+  jobDescription?: string;
+  requiredSkills?: string[];
+  sourcingChannels?: string[];
   status: Position["status"];
-  salary: string;
+  phases?: RecruitmentPhase[];
 }
+
 export interface CandidateInput {
   name: string;
   email: string;
@@ -61,6 +98,7 @@ export interface CandidateInput {
   source: string;
   note: string;
 }
+
 export interface ContractInput {
   companyId: string;
   documentType: Contract["documentType"];
@@ -87,11 +125,12 @@ interface StoreValue {
 
   addCompany: (input: CompanyInput) => string;
   updateCompany: (id: string, input: CompanyInput) => void;
-  deleteCompany: (id: string) => void;
+  toggleCompanyActive: (id: string) => void;
 
   addPosition: (input: PositionInput) => string;
   updatePosition: (id: string, input: PositionInput) => void;
-  setPositionStatus: (id: string, status: Position["status"]) => void;
+  setPositionStatus: (id: string, status: Position["status"], reason?: string) => void;
+  configurePositionPhases: (id: string, phases: RecruitmentPhase[], reason: string) => void;
   deletePosition: (id: string) => void;
 
   addCandidate: (input: CandidateInput) => string;
@@ -102,6 +141,10 @@ interface StoreValue {
   addContract: (input: ContractInput) => string;
   updateContract: (id: string, input: ContractInput) => void;
   deleteContract: (id: string) => void;
+
+  addSourcingResource: (input: SourcingResourceInput) => string;
+  updateSourcingResource: (id: string, input: Partial<SourcingResourceInput>) => void;
+  deleteSourcingResource: (id: string) => void;
 
   connect: (url: string) => Promise<string | null>;
   disconnect: () => void;
@@ -261,7 +304,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const addCompany = useCallback(
     (input: CompanyInput) => {
       const now = Date.now();
-      const rec: Company = { id: uid("c"), ...input, createdAt: now, updatedAt: now };
+      const rec: Company = { 
+        id: uid("c"), 
+        ...input, 
+        isActive: input.isActive ?? true,
+        createdAt: now, 
+        updatedAt: now 
+      };
       setDb((d) =>
         withLog({ ...d, companies: [...d.companies, rec] }, "company", `${rec.name} added as a client`)
       );
@@ -285,23 +334,26 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [pushRecord]
   );
 
-  const deleteCompany = useCallback(
+  const toggleCompanyActive = useCallback(
     (id: string) => {
       const d = dbRef.current;
       const company = d.companies.find((c) => c.id === id);
-      const posIds = new Set(d.positions.filter((p) => p.companyId === id).map((p) => p.id));
-      const next: DB = {
-        ...d,
-        companies: d.companies.filter((c) => c.id !== id),
-        positions: d.positions.filter((p) => p.companyId !== id),
-        candidates: d.candidates.map((k) =>
-          k.positionId && posIds.has(k.positionId) ? { ...k, positionId: null } : k
-        ),
-      };
-      setDb(withLog(next, "company", `${company?.name ?? "Client"} removed from workspace`));
-      pushSnapshot(next, "The change");
+      if (!company) return;
+      const isActive = !company.isActive;
+      let rec: Company | null = null;
+      setDb((prev) => {
+        const companies = prev.companies.map((c) =>
+          c.id === id ? ((rec = { ...c, isActive, updatedAt: Date.now() }), rec) : c
+        );
+        return withLog(
+          { ...prev, companies },
+          "company",
+          `${company.name} marked ${isActive ? "Active" : "Inactive"}`
+        );
+      });
+      if (rec) pushRecord("Companies", rec, company.name);
     },
-    [pushSnapshot]
+    [pushRecord]
   );
 
   /* ---------------- positions ---------------- */
@@ -309,7 +361,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const addPosition = useCallback(
     (input: PositionInput) => {
       const now = Date.now();
-      const rec: Position = { id: uid("p"), ...input, openedAt: now, createdAt: now, updatedAt: now };
+      const rec: Position = { 
+        id: uid("p"), 
+        ...input,
+        headcount: input.headcount ?? 1,
+        filledCount: input.filledCount ?? 0,
+        minSalary: input.minSalary ?? 0,
+        maxSalary: input.maxSalary ?? 0,
+        phases: input.phases ?? getDefaultPhases(),
+        openedAt: now, 
+        createdAt: now, 
+        updatedAt: now 
+      };
       const client = dbRef.current.companies.find((c) => c.id === input.companyId)?.name ?? "client";
       setDb((d) =>
         withLog({ ...d, positions: [...d.positions, rec] }, "position", `${rec.title} opened at ${client}`)
@@ -335,15 +398,40 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   );
 
   const setPositionStatus = useCallback(
-    (id: string, status: Position["status"]) => {
+    (id: string, status: Position["status"], reason?: string) => {
       const existing = dbRef.current.positions.find((p) => p.id === id);
       if (!existing || existing.status === status) return;
-      const rec: Position = { ...existing, status, updatedAt: Date.now() };
+      const updates: Partial<Position> = { status, updatedAt: Date.now() };
+      // Set holdSince when moving to On Hold
+      if (status === "On Hold") {
+        updates.holdSince = Date.now();
+      } else if (existing.holdSince && status !== "On Hold") {
+        // Clear holdSince when leaving On Hold
+        delete updates.holdSince;
+      }
+      const rec: Position = { ...existing, ...updates };
       setDb((d) =>
         withLog(
           { ...d, positions: d.positions.map((p) => (p.id === id ? rec : p)) },
           "position",
-          `${rec.title} marked ${status}`
+          `${rec.title} marked ${status}${reason ? ` (${reason})` : ""}`
+        )
+      );
+      pushRecord("Positions", rec, rec.title);
+    },
+    [pushRecord]
+  );
+
+  const configurePositionPhases = useCallback(
+    (id: string, phases: RecruitmentPhase[], reason: string) => {
+      const existing = dbRef.current.positions.find((p) => p.id === id);
+      if (!existing) return;
+      const rec: Position = { ...existing, phases, updatedAt: Date.now() };
+      setDb((d) =>
+        withLog(
+          { ...d, positions: d.positions.map((p) => (p.id === id ? rec : p)) },
+          "position",
+          `${rec.title} pipeline phases reconfigured: ${reason}`
         )
       );
       pushRecord("Positions", rec, rec.title);
@@ -365,6 +453,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     },
     [pushSnapshot]
   );
+
+  // Default recruitment phases for new positions
+  function getDefaultPhases(): RecruitmentPhase[] {
+    return [
+      { code: "Sourced", enabled: true, required: true },
+      { code: "Screened", enabled: true, required: false },
+      { code: "Interview", enabled: true, required: false },
+      { code: "Offer", enabled: true, required: false },
+      { code: "Placed", enabled: true, required: true },
+      { code: "Rejected", enabled: true, required: false },
+    ];
+  }
 
   /* ---------------- candidates ---------------- */
 
@@ -579,10 +679,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     resolveConfirm,
     addCompany,
     updateCompany,
-    deleteCompany,
+    toggleCompanyActive,
     addPosition,
     updatePosition,
     setPositionStatus,
+    configurePositionPhases,
     deletePosition,
     addCandidate,
     updateCandidate,
@@ -591,6 +692,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addContract,
     updateContract,
     deleteContract,
+    addSourcingResource: () => "", // placeholder - implement when needed
+    updateSourcingResource: () => {}, // placeholder
+    deleteSourcingResource: () => {}, // placeholder
     connect,
     disconnect,
     syncNow,
