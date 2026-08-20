@@ -2,33 +2,21 @@ import React, { useMemo, useState } from "react";
 import type { Company, Contract } from "../types";
 import { useStore, type CompanyInput } from "../store";
 import { fmtDate, hostOf, normalizeUrl, timeAgo } from "../lib/utils";
-import { Avatar, Btn, Chip, EmptyState, Field, IconBtn, Select, SlideOver, TextArea, TextInput } from "../components/ui";
 import {
-  IconBuilding,
-  IconCalendar,
-  IconDownload,
-  IconExternal,
-  IconGlobe,
-  IconMail,
-  IconPencil,
-  IconPhone,
-  IconPlus,
-  IconSearch,
-  IconTrash,
-  IconUpload,
-  IconUser,
-  IconX,
-  IconFile,
-  IconAlertCircle,
+  Avatar, Btn, Chip, EmptyState, Field, IconBtn, Select, SlideOver, TextArea, TextInput
+} from "../components/ui";
+import {
+  IconBuilding, IconCalendar, IconDownload, IconExternal, IconGlobe, IconMail,
+  IconPencil, IconPhone, IconPlus, IconSearch, IconTrash, IconUpload, IconUser,
+  IconX, IconFile, IconAlertCircle, IconLock
 } from "../components/icons";
 
-const EMPTY_INPUT: CompanyInput = { name: "", address: "", contact: "", contactEmail: "", contactPhone: "", website: "" };
+const EMPTY_INPUT: CompanyInput = {
+  name: "", address: "", contact: "", contactEmail: "", contactPhone: "", website: ""
+};
 
-function CompanyForm({
-  initial,
-  submitLabel,
-  onSubmit,
-}: {
+// ————— Company form (unchanged) —————
+function CompanyForm({ initial, submitLabel, onSubmit }: {
   initial: CompanyInput;
   submitLabel: string;
   onSubmit: (v: CompanyInput) => void;
@@ -61,49 +49,22 @@ function CompanyForm({
   return (
     <form onSubmit={submit} className="space-y-4" id="company-form">
       <Field label="Company name" error={errors.name}>
-        <TextInput
-          autoFocus
-          value={form.name}
-          invalid={!!errors.name}
-          onChange={set("name")}
-          placeholder="e.g. Northwind Robotics"
-        />
+        <TextInput autoFocus value={form.name} invalid={!!errors.name} onChange={set("name")} placeholder="e.g. Northwind Robotics" />
       </Field>
       <Field label="Company address" hint="optional">
-        <TextArea
-          rows={2}
-          value={form.address}
-          onChange={set("address")}
-          placeholder="Street, city, country"
-        />
+        <TextArea rows={2} value={form.address} onChange={set("address")} placeholder="Street, city, country" />
       </Field>
       <Field label="Company contact person" hint="optional">
         <TextInput value={form.contact} onChange={set("contact")} placeholder="Who do you talk to?" />
       </Field>
       <Field label="Contact email" hint="optional">
-        <TextInput
-          value={form.contactEmail}
-          onChange={set("contactEmail")}
-          placeholder="email@company.com"
-          inputMode="email"
-        />
+        <TextInput value={form.contactEmail} onChange={set("contactEmail")} placeholder="email@company.com" inputMode="email" />
       </Field>
       <Field label="Contact phone" hint="optional">
-        <TextInput
-          value={form.contactPhone}
-          onChange={set("contactPhone")}
-          placeholder="+1 (555) 123-4567"
-          inputMode="tel"
-        />
+        <TextInput value={form.contactPhone} onChange={set("contactPhone")} placeholder="+1 (555) 123-4567" inputMode="tel" />
       </Field>
       <Field label="Company page" error={errors.website} hint="web page of the company">
-        <TextInput
-          value={form.website}
-          invalid={!!errors.website}
-          onChange={set("website")}
-          placeholder="https://…"
-          inputMode="url"
-        />
+        <TextInput value={form.website} invalid={!!errors.website} onChange={set("website")} placeholder="https://…" inputMode="url" />
       </Field>
       <button type="submit" className="hidden" aria-hidden="true" />
       <p className="rounded-lg border border-pine-200 bg-pine-50 px-3 py-2.5 text-xs leading-relaxed text-pine-700">
@@ -117,17 +78,20 @@ function CompanyForm({
   );
 }
 
+// ————— Sourcing resource types —————
 interface SourcingResource {
   id: string;
   name: string;
   type: string;
   url: string;
   companyId: string;
+  companyName: string; // added for direct display
   account: string;
   credentialRef: string;
   status: "ACTIVE" | "PENDING";
 }
 
+// Hardcoded sourcing resources (adapted to include companyName)
 const SOURCING_RESOURCES: SourcingResource[] = [
   {
     id: "sr-1",
@@ -135,6 +99,7 @@ const SOURCING_RESOURCES: SourcingResource[] = [
     type: "Sourcing platform",
     url: "linkedin.com/recruiter",
     companyId: "nusa-fintech",
+    companyName: "Nusa Fintech Group",
     account: "raka@tapak.id",
     credentialRef: "VAULT:ln-recruiter-nusa",
     status: "ACTIVE",
@@ -145,6 +110,7 @@ const SOURCING_RESOURCES: SourcingResource[] = [
     type: "Job board",
     url: "glints.com/employer",
     companyId: "nusa-fintech",
+    companyName: "Nusa Fintech Group",
     account: "talent@nusafintech.co.id",
     credentialRef: "VAULT:glints-nusa",
     status: "ACTIVE",
@@ -155,6 +121,7 @@ const SOURCING_RESOURCES: SourcingResource[] = [
     type: "Job board",
     url: "glints.com/employer",
     companyId: "samudra-biru",
+    companyName: "PT Samudra Biru Logistik",
     account: "people@samudrabiru.co.id",
     credentialRef: "VAULT:glints-samudra",
     status: "PENDING",
@@ -165,18 +132,88 @@ const SOURCING_RESOURCES: SourcingResource[] = [
     type: "Job board",
     url: "jobstreet.co.id",
     companyId: "kirana-retail",
+    companyName: "Kirana Retail Indonesia",
     account: "oscar@kiranaretail.id",
     credentialRef: "VAULT:js-kirana",
     status: "ACTIVE",
   },
 ];
 
+// Simple form for adding a sourcing resource (optional)
+function SourcingResourceForm({ onSubmit }: { onSubmit: (v: SourcingResource) => void }) {
+  const { db } = useStore();
+  const [name, setName] = useState("");
+  const [type, setType] = useState("");
+  const [url, setUrl] = useState("");
+  const [companyId, setCompanyId] = useState("");
+  const [account, setAccount] = useState("");
+  const [credentialRef, setCredentialRef] = useState("");
+  const [status, setStatus] = useState<"ACTIVE" | "PENDING">("ACTIVE");
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !companyId) return;
+    const company = db.companies.find((c) => c.id === companyId);
+    onSubmit({
+      id: `sr-${Date.now()}`,
+      name: name.trim(),
+      type: type.trim() || "Sourcing platform",
+      url: url.trim(),
+      companyId,
+      companyName: company?.name ?? "",
+      account: account.trim(),
+      credentialRef: credentialRef.trim() || "VAULT:",
+      status,
+    });
+  };
+
+  return (
+    <form onSubmit={submit} className="space-y-4">
+      <Field label="Resource name" >
+        <TextInput autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. LinkedIn Recruiter Seat" />
+      </Field>
+      <Field label="Type" hint="e.g. Job board, Sourcing platform">
+        <TextInput value={type} onChange={(e) => setType(e.target.value)} placeholder="Job board" />
+      </Field>
+      <Field label="URL" hint="domain only">
+        <TextInput value={url} onChange={(e) => setUrl(e.target.value)} placeholder="linkedin.com/recruiter" />
+      </Field>
+      <Field label="Client">
+        <Select value={companyId} onChange={(e) => setCompanyId(e.target.value)}>
+          <option value="">Select a client…</option>
+          {db.companies.map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </Select>
+      </Field>
+      <Field label="Account / login">
+        <TextInput value={account} onChange={(e) => setAccount(e.target.value)} placeholder="email@company.com" />
+      </Field>
+      <Field label="Credential ref" hint="vault reference only">
+        <TextInput value={credentialRef} onChange={(e) => setCredentialRef(e.target.value)} placeholder="VAULT:…" />
+      </Field>
+      <Field label="Access status">
+        <Select value={status} onChange={(e) => setStatus(e.target.value as "ACTIVE" | "PENDING")}>
+          <option value="ACTIVE">ACTIVE</option>
+          <option value="PENDING">PENDING</option>
+        </Select>
+      </Field>
+      <div className="flex justify-end border-t border-line pt-4">
+        <Btn type="submit">Add resource</Btn>
+      </div>
+    </form>
+  );
+}
+
+// ————— Main page —————
 export function CompaniesPage() {
   const { db, addCompany, updateCompany, deleteCompany, toast, askConfirm } = useStore();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"recent" | "name">("recent");
   const [panel, setPanel] = useState<{ mode: "add" } | { mode: "edit"; company: Company } | null>(null);
+  const [sourcingPanel, setSourcingPanel] = useState<boolean>(false);
   const [flashId, setFlashId] = useState<string | null>(null);
+  const [sourcingResources, setSourcingResources] = useState<SourcingResource[]>(SOURCING_RESOURCES);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -190,6 +227,15 @@ export function CompaniesPage() {
     );
     return [...list].sort((a, b) => (sort === "name" ? a.name.localeCompare(b.name) : b.updatedAt - a.updatedAt));
   }, [db.companies, query, sort]);
+
+  // Generate display codes like CLI-001 based on original index
+  const companyCodes = useMemo(() => {
+    const map = new Map<string, string>();
+    db.companies.forEach((c, i) => {
+      map.set(c.id, generateCompanyId(c.name, i));
+    });
+    return map;
+  }, [db.companies]);
 
   const flash = (id: string) => {
     setFlashId(id);
@@ -247,8 +293,26 @@ export function CompaniesPage() {
     return `${prefix}-${String(index + 1).padStart(3, "0")}`;
   };
 
+  // Placeholder function for contract upload/replace
+  const handleContractUpload = (companyId: string, file: File | null) => {
+    if (!file) return;
+    // In a real app, you would call a store action to upload and update contract
+    toast("info", "Contract upload", `Uploading ${file.name} for client…`);
+    // Simulate a delay
+    setTimeout(() => {
+      toast("success", "Contract updated", "Contract file attached.");
+    }, 800);
+  };
+
+  const handleAddSourcingResource = (resource: SourcingResource) => {
+    setSourcingResources((prev) => [...prev, resource]);
+    setSourcingPanel(false);
+    toast("success", "Sourcing resource added", `${resource.name} saved.`);
+  };
+
   return (
     <div className="space-y-5">
+      {/* Header */}
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="font-mono text-[11px] font-medium tracking-[0.16em] text-gold-600 uppercase">
@@ -259,11 +323,17 @@ export function CompaniesPage() {
             The client organisations you source for — {db.companies.length} on the books.
           </p>
         </div>
-        <Btn onClick={() => setPanel({ mode: "add" })}>
-          <IconPlus size={16} /> Add company
-        </Btn>
+        <div className="flex items-center gap-2">
+          <Btn variant="ghost" onClick={() => setSourcingPanel(true)}>
+            <IconSearch size={16} /> Sourcing resource
+          </Btn>
+          <Btn onClick={() => setPanel({ mode: "add" })}>
+            <IconPlus size={16} /> New client
+          </Btn>
+        </div>
       </header>
 
+      {/* Search & sort */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[220px] flex-1 sm:max-w-xs">
           <IconSearch size={15} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-faint" />
@@ -293,6 +363,7 @@ export function CompaniesPage() {
         </span>
       </div>
 
+      {/* Empty states */}
       {db.companies.length === 0 ? (
         <EmptyState
           icon={<IconBuilding size={24} />}
@@ -313,127 +384,162 @@ export function CompaniesPage() {
           </Btn>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-line bg-card shadow-lift">
-          <table className="w-full min-w-[1100px] border-collapse text-left text-sm">
-            <thead>
-              <tr className="border-b border-line bg-paper/80">
-                {["Company name", "Company address", "Company contact person", "Contact email", "Contact phone", "Company page"].map((h) => (
-                  <th
-                    key={h}
-                    className="px-5 py-3 font-mono text-[10.5px] font-semibold tracking-[0.13em] text-mist uppercase"
-                  >
-                    {h}
-                  </th>
-                ))}
-                <th className="px-5 py-3 text-right font-mono text-[10.5px] font-semibold tracking-[0.13em] text-mist uppercase">
-                  Edit
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((c, i) => (
-                <tr
+        <>
+          {/* Client cards grid */}
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 stagger">
+            {filtered.map((c, i) => {
+              const contract = getContractForCompany(c.id);
+              const { total, open } = getPositionCounts(c.id);
+              const code = companyCodes.get(c.id) || c.id;
+              const domain = c.website ? hostOf(c.website) : "—";
+              const isFlash = flashId === c.id;
+
+              return (
+                <div
                   key={c.id}
-                  className={`anim-rise group border-b border-line/70 transition-colors last:border-0 hover:bg-pine-50/60 ${
-                    flashId === c.id ? "anim-flashrow" : ""
+                  className={`bg-card border border-ink-900/8 rounded-xl p-4 hover:border-moss-300 hover:-translate-y-0.5 transition-all duration-200 ${
+                    isFlash ? "anim-flashrow" : ""
                   }`}
-                  style={{ animationDelay: `${Math.min(i, 8) * 45}ms` }}
                 >
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <Avatar name={c.name} />
-                      <div className="min-w-0">
-                        <p className="font-semibold text-ink">{c.name}</p>
-                        <p className="mt-0.5 font-mono text-[10.5px] text-faint">
-                          {c.id} · updated {timeAgo(c.updatedAt)}
-                        </p>
+                  {/* Top row: name & status */}
+                  <div className="flex items-start justify-between">
+                    <div className="min-w-0">
+                      <div className="font-display font-bold text-[15px] text-ink-900 truncate">{c.name}</div>
+                      <div className="text-[11px] text-ink-400 font-mono truncate">
+                        {domain} · <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-ink-900/6 text-ink-700 border border-ink-900/8">{code}</span>
                       </div>
                     </div>
-                  </td>
-                  <td className="max-w-[280px] px-5 py-3.5 align-top text-[13px] leading-relaxed text-mist">
-                    {c.address ? (
-                      <span className="line-clamp-2" title={c.address}>
-                        {c.address}
-                      </span>
-                    ) : (
-                      <span className="text-faint">—</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-3.5 align-top">
-                    {c.contact ? (
-                      <span className="inline-flex items-center gap-2 text-[13px] font-medium text-ink">
-                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-sea-100 text-sea-600">
-                          <IconUser size={13} />
-                        </span>
-                        {c.contact}
-                      </span>
-                    ) : (
-                      <span className="text-faint">—</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-3.5 align-top">
-                    {c.contactEmail ? (
-                      <a
-                        href={`mailto:${c.contactEmail}`}
-                        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-sea-700 hover:underline"
-                      >
-                        <IconMail size={13} className="shrink-0 opacity-70" />
-                        {c.contactEmail}
-                      </a>
-                    ) : (
-                      <span className="text-faint">—</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-3.5 align-top">
-                    {c.contactPhone ? (
-                      <a
-                        href={`tel:${c.contactPhone}`}
-                        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-sea-700 hover:underline"
-                      >
-                        <IconPhone size={13} className="shrink-0 opacity-70" />
-                        {c.contactPhone}
-                      </a>
-                    ) : (
-                      <span className="text-faint">—</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-3.5 align-top">
-                    {c.website ? (
-                      <a
-                        href={c.website}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        className="group/link inline-flex max-w-[240px] items-center gap-1.5 rounded-md border border-sea-200 bg-sea-100 px-2.5 py-1 text-xs font-semibold text-sea-700 transition-colors hover:border-sea-500 hover:bg-sea-200"
-                        title={c.website}
-                      >
-                        <IconGlobe size={13} className="shrink-0" />
-                        <span className="truncate">{hostOf(c.website)}</span>
-                        <IconExternal size={12} className="shrink-0 opacity-50 transition-opacity group-hover/link:opacity-100" />
-                      </a>
-                    ) : (
-                      <span className="text-faint">—</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-3.5 align-top">
-                    <div className="flex items-center justify-end gap-1">
-                      <Chip className="mr-1 hidden border-line bg-paper font-mono text-[10px] text-faint lg:inline-flex">
-                        since {fmtDate(c.createdAt)}
-                      </Chip>
-                      <IconBtn tone="brand" label={`Edit ${c.name}`} onClick={() => setPanel({ mode: "edit", company: c })}>
-                        <IconPencil size={15} />
-                      </IconBtn>
-                      <IconBtn tone="danger" label={`Remove ${c.name}`} onClick={() => handleDelete(c)}>
-                        <IconTrash size={15} />
-                      </IconBtn>
+                    <span className="text-[9.5px] font-bold uppercase tracking-wide rounded-full px-2 py-1 bg-moss-100 text-moss-800 shrink-0">
+                      {contract ? "SIGNED" : "UNSIGNED"}
+                    </span>
+                  </div>
+
+                  {/* Contact info */}
+                  <div className="mt-3 text-xs text-ink-600 space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <IconUser size={12} className="shrink-0 text-ink-300" />
+                      {c.contact ? `${c.contact} — ${c.contactEmail || "no email"}` : "No contact person"}
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    <div className="flex items-center gap-1.5">
+                      <IconMail size={12} className="shrink-0 text-ink-300" />
+                      {c.contactEmail || "—"}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <IconCalendar size={12} className="shrink-0 text-ink-300" />
+                      {contract ? `${fmtDate(contract.startDate)} → ${fmtDate(contract.endDate)}` : "No contract dates"}
+                    </div>
+                  </div>
+
+                  {/* Requisition counts */}
+                  <div className="mt-3 flex items-center gap-2 text-[11px] text-ink-500">
+                    <span className="font-bold text-ink-700">{total}</span> requisitions ·{" "}
+                    <span className="font-bold text-moss-700">{open}</span> open
+                  </div>
+
+                  {/* Contract file / upload */}
+                  <div className="mt-3 pt-3 border-t border-ink-900/6 flex items-center justify-between gap-2">
+                    {contract ? (
+                      <span className="flex items-center gap-1.5 text-[10.5px] font-mono text-moss-700 min-w-0">
+                        <IconFile size={12} className="shrink-0" />
+                        <span className="truncate">{contract.fileName || "contract.pdf"}</span>
+                      </span>
+                    ) : (
+                      <span className="text-[10.5px] text-hono-600 font-semibold flex items-center gap-1">
+                        <IconAlertCircle size={11} className="shrink-0" />
+                        No contract on file
+                      </span>
+                    )}
+                    <label className="text-[10.5px] font-bold text-river-600 hover:text-river-800 cursor-pointer inline-flex items-center gap-1 shrink-0">
+                      <IconUpload size={11} className="shrink-0" />
+                      {contract ? "Replace" : "Upload"}
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        className="hidden"
+                        onChange={(e) => handleContractUpload(c.id, e.target.files?.[0] ?? null)}
+                      />
+                    </label>
+                  </div>
+
+                  {/* Edit/delete buttons */}
+                  <div className="mt-3 pt-3 border-t border-ink-900/6 flex justify-end gap-1">
+                    <IconBtn tone="brand" label={`Edit ${c.name}`} onClick={() => setPanel({ mode: "edit", company: c })}>
+                      <IconPencil size={14} />
+                    </IconBtn>
+                    <IconBtn tone="danger" label={`Remove ${c.name}`} onClick={() => handleDelete(c)}>
+                      <IconTrash size={14} />
+                    </IconBtn>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Sourcing resources table */}
+          <div className="mt-6 bg-card border border-ink-900/8 rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-ink-900/6 flex items-center justify-between">
+              <h4 className="font-display font-bold text-sm text-ink-900 flex items-center gap-2">
+                <IconSearch size={14} className="shrink-0 text-moss-600" />
+                Sourcing resources
+              </h4>
+              <span className="text-[10.5px] font-semibold text-hono-800 bg-hono-100 rounded-full px-2.5 py-1 flex items-center gap-1">
+                <IconLock size={10} className="shrink-0" />
+                vault references only — no plaintext passwords
+              </span>
+            </div>
+            <div className="overflow-x-auto scroll-thin">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="text-[10px] uppercase tracking-wider text-ink-400 border-b border-ink-900/6">
+                    <th className="px-4 py-2.5 font-bold">Resource</th>
+                    <th className="px-3 py-2.5 font-bold">Client</th>
+                    <th className="px-3 py-2.5 font-bold">Account</th>
+                    <th className="px-3 py-2.5 font-bold">Credential ref</th>
+                    <th className="px-3 py-2.5 font-bold">Access</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sourcingResources.map((res) => (
+                    <tr key={res.id} className="border-b border-ink-900/4 hover:bg-moss-50/60 transition-colors">
+                      <td className="px-4 py-2.5">
+                        <div className="font-bold text-ink-900">{res.name}</div>
+                        <div className="text-[10px] text-ink-400">{res.type} · {res.url}</div>
+                      </td>
+                      <td className="px-3 py-2.5 text-ink-600">{res.companyName}</td>
+                      <td className="px-3 py-2.5 font-mono text-[10.5px] text-ink-500">{res.account}</td>
+                      <td className="px-3 py-2.5">
+                        <span className="font-mono text-[11px] px-1.5 py-0.5 rounded bg-ink-900/6 text-ink-700 border border-ink-900/8">
+                          {res.credentialRef}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <span
+                          className={`text-[9.5px] font-bold uppercase tracking-wide rounded-full px-2 py-0.5 ${
+                            res.status === "ACTIVE"
+                              ? "bg-moss-100 text-moss-800"
+                              : "bg-hono-100 text-hono-800"
+                          }`}
+                        >
+                          {res.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {sourcingResources.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-8 text-center text-faint">
+                        No sourcing resources yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
       )}
 
+      {/* SlideOver: Add/Edit Company */}
       <SlideOver
         open={panel !== null}
         onClose={() => setPanel(null)}
@@ -462,6 +568,16 @@ export function CompaniesPage() {
             </div>
           </>
         )}
+      </SlideOver>
+
+      {/* SlideOver: Add Sourcing Resource */}
+      <SlideOver
+        open={sourcingPanel}
+        onClose={() => setSourcingPanel(false)}
+        kicker="Sourcing resource"
+        title="Add sourcing resource"
+      >
+        <SourcingResourceForm onSubmit={handleAddSourcingResource} />
       </SlideOver>
     </div>
   );
