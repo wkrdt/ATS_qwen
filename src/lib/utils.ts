@@ -97,3 +97,36 @@ export function addedThisWeek(items: { createdAt: number }[]): number {
   const cutoff = Date.now() - WEEK;
   return items.filter((i) => i.createdAt >= cutoff).length;
 }
+
+/** Format salary in jt IDR (divide by 1,000,000, one decimal place) */
+export function fmtJtIDR(min: number, max: number): string {
+  const minJt = (min / 1_000_000).toFixed(1);
+  const maxJt = (max / 1_000_000).toFixed(1);
+  return `${minJt} – ${maxJt} jt IDR`;
+}
+
+/** Parse salary input that may be full integer or "jt" shorthand, returns full integer IDR */
+export function parseSalaryInput(value: string): number {
+  const v = value.trim().toLowerCase();
+  if (!v) return 0;
+  // Handle "X.X jt" format
+  const jtMatch = v.match(/^([\d.]+)\s*jt$/);
+  if (jtMatch) {
+    return Math.round(parseFloat(jtMatch[1]) * 1_000_000);
+  }
+  // Handle plain integer
+  const num = parseInt(v.replace(/[^0-9]/g, ""), 10);
+  return Number.isFinite(num) ? num : 0;
+}
+
+/** Calculate days remaining until a target date (negative if overdue) */
+export function daysUntil(targetTs: number): number {
+  const now = Date.now();
+  const diff = targetTs - now;
+  return Math.ceil(diff / (24 * 3600 * 1000));
+}
+
+/** Check if a date is in the past */
+export function isPast(ts: number): boolean {
+  return ts < Date.now();
+}

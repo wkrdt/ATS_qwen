@@ -6,6 +6,35 @@ export interface Company {
   contactEmail?: string;
   contactPhone?: string;
   website: string;
+  // PIC details
+  picName?: string;
+  picPosition?: string;
+  picEmail?: string;
+  picPhoneWA?: string;
+  // Contract details
+  contractStart?: number; // ISO timestamp
+  contractEnd?: number; // ISO timestamp
+  contractStatus?: "SIGNED" | "PENDING" | "EXPIRED" | "TERMINATED";
+  contractFileName?: string;
+  contractDriveFileId?: string;
+  contractLocalCacheId?: string;
+  // Active state (soft-delete replacement)
+  isActive: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+// Sourcing resource for a company (stored in separate sheet)
+export interface SourcingResource {
+  id: string;
+  companyId: string;
+  resourceName: string;
+  resourceType: string; // e.g. "LinkedIn Recruiter", "Job board"
+  url: string;
+  accountUsername: string;
+  credentialReference: string; // VAULT reference only - never plaintext
+  accessStatus: "ACTIVE" | "PENDING" | "REVOKED";
+  notes?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -26,14 +55,44 @@ export interface Contract {
 
 export type PositionType = "Full-time" | "Part-time" | "Contract";
 export type PositionStatus = "Open" | "On Hold" | "Filled" | "Cancelled";
+export type PositionLevel = "Junior" | "Mid" | "Senior" | "Lead" | "Manager";
+export type WorkArrangement = "On-site" | "Hybrid" | "Remote";
+
+// Phase in recruitment pipeline
+export interface RecruitmentPhase {
+  code: Stage;
+  enabled: boolean;
+  required: boolean;
+}
 
 export interface Position {
   id: string;
   companyId: string;
   title: string;
-  type: PositionType;
+  // New fields per PRD
+  department?: string;
+  level?: PositionLevel;
+  headcount: number;
+  filledCount: number;
+  minSalary: number; // full integer IDR
+  maxSalary: number; // full integer IDR
+  employmentType: PositionType;
+  workLocation?: string;
+  workArrangement?: WorkArrangement;
+  targetDate?: number; // ISO timestamp
+  hiringManagerName?: string;
+  hiringManagerEmail?: string;
+  jobDescription?: string;
+  requiredSkills?: string[];
+  sourcingChannels?: string[];
+  // Status tracking
   status: PositionStatus;
-  salary: string;
+  holdSince?: number; // ISO timestamp when moved to On Hold
+  // Pipeline phases
+  phases: RecruitmentPhase[];
+  // Legacy salary field for backward compatibility (display only)
+  salary?: string;
+  // Timestamps
   openedAt: number;
   createdAt: number;
   updatedAt: number;
@@ -68,6 +127,7 @@ export interface DB {
   positions: Position[];
   candidates: Candidate[];
   contracts: Contract[];
+  sourcingResources: SourcingResource[];
   activity: Activity[];
 }
 
