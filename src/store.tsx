@@ -11,7 +11,7 @@ import type { ActivityKind, Candidate, Company, Contract, DB, Position, Settings
 import { mergeById, uid } from "./lib/utils";
 import * as api from "./lib/api";
 import type { SheetName } from "./lib/api";
-import type { CompanyInput, PositionInput, CandidateInput, ContractInput } from "./store";
+import { buildSeed, EMPTY_DB } from "./data/seed";
 
 const LS_DB = "talentledger.db.v1";
 const LS_SETTINGS = "talentledger.settings.v1";
