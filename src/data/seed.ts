@@ -1,4 +1,4 @@
-import type { DB } from "../types";
+import type { DB, Contract } from "../types";
 import { uid } from "../lib/utils";
 
 const DAY = 24 * 3600 * 1000;
@@ -58,6 +58,42 @@ export function buildSeed(): DB {
     { id: uid("a"), kind: "candidate" as const, message: "Rahman Hakim placed — HSE Specialist", at: t(9) },
   ].sort((a, b) => b.at - a.at);
 
+  // Sample contracts for demo companies
+  const contractNow = Date.now();
+  const day = 24 * 3600 * 1000;
+  const contracts: Contract[] = [
+    {
+      id: uid("ct"),
+      companyId: cHalliburton.id,
+      documentType: "Main Contract",
+      startDate: contractNow - 180 * day,
+      endDate: contractNow + 185 * day,
+      notes: "Initial consulting agreement for recruitment services",
+      createdAt: contractNow - 180 * day,
+      updatedAt: contractNow - 180 * day,
+    },
+    {
+      id: uid("ct"),
+      companyId: cHalodoc.id,
+      documentType: "Addendum",
+      startDate: contractNow - 90 * day,
+      endDate: contractNow + 275 * day,
+      notes: "Extended scope for data science roles",
+      createdAt: contractNow - 90 * day,
+      updatedAt: contractNow - 90 * day,
+    },
+    {
+      id: uid("ct"),
+      companyId: cSTS.id,
+      documentType: "Main Contract",
+      startDate: contractNow - 30 * day,
+      endDate: contractNow + 15 * day,
+      notes: "Contract expiring soon - renewal needed",
+      createdAt: contractNow - 30 * day,
+      updatedAt: contractNow - 30 * day,
+    },
+  ];
+
   return {
     companies: [cHalliburton, cIndika, cHalodoc, cSTS],
     positions: [
@@ -67,8 +103,9 @@ export function buildSeed(): DB {
       pSTSSales, pSTSTech, pSTSMkt,
     ],
     candidates,
+    contracts,
     activity,
   };
 }
 
-export const EMPTY_DB: DB = { companies: [], positions: [], candidates: [], activity: [] };
+export const EMPTY_DB: DB = { companies: [], positions: [], candidates: [], contracts: [], activity: [] };

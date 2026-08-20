@@ -6,11 +6,13 @@
  */
 
 var SHEET_COLUMNS = {
-  Companies:  ['id', 'name', 'address', 'contact', 'website', 'createdAt', 'updatedAt'],
+  Companies:  ['id', 'name', 'address', 'contact', 'contactEmail', 'contactPhone', 'website', 'createdAt', 'updatedAt'],
   Positions:  ['id', 'companyId', 'title', 'type', 'status', 'salary',
                'openedAt', 'createdAt', 'updatedAt'],
   Candidates: ['id', 'name', 'email', 'phone', 'positionId', 'stage',
-               'source', 'note', 'createdAt', 'updatedAt']
+               'source', 'note', 'createdAt', 'updatedAt'],
+  Contracts:  ['id', 'companyId', 'documentType', 'startDate', 'endDate',
+               'documentUrl', 'notes', 'createdAt', 'updatedAt']
 };
 
 function getSheet_(name) {

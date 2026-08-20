@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import type { ActivityKind, Candidate, Company, DB, Position, Settings, Stage } from "./types";
+import type { ActivityKind, Candidate, Company, Contract, DB, Position, Settings, Stage } from "./types";
 import { EMPTY_DB, buildSeed } from "./data/seed";
 import { mergeById, uid } from "./lib/utils";
 import * as api from "./lib/api";
@@ -41,6 +41,8 @@ export interface CompanyInput {
   name: string;
   address: string;
   contact: string;
+  contactEmail?: string;
+  contactPhone?: string;
   website: string;
 }
 export interface PositionInput {
@@ -59,6 +61,14 @@ export interface CandidateInput {
   source: string;
   note: string;
 }
+export interface ContractInput {
+  companyId: string;
+  documentType: Contract["documentType"];
+  startDate: number;
+  endDate: number;
+  documentUrl?: string;
+  notes?: string;
+}
 
 interface StoreValue {
   db: DB;
@@ -68,6 +78,7 @@ interface StoreValue {
   confirm: ConfirmRequest | null;
   companiesById: Map<string, Company>;
   positionsById: Map<string, Position>;
+  contractsByCompany: Map<string, Contract[]>;
 
   toast: (kind: Toast["kind"], title: string, desc?: string) => void;
   dismissToast: (id: string) => void;
@@ -87,6 +98,10 @@ interface StoreValue {
   updateCandidate: (id: string, input: CandidateInput) => void;
   setCandidateStage: (id: string, stage: Stage) => void;
   deleteCandidate: (id: string) => void;
+
+  addContract: (input: ContractInput) => string;
+  updateContract: (id: string, input: ContractInput) => void;
+  deleteContract: (id: string) => void;
 
   connect: (url: string) => Promise<string | null>;
   disconnect: () => void;
@@ -411,6 +426,47 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [pushRemove]
   );
 
+  /* ---------------- contracts ---------------- */
+
+  const addContract = useCallback(
+    (input: ContractInput) => {
+      const now = Date.now();
+      const rec: Contract = { id: uid("ct"), ...input, createdAt: now, updatedAt: now };
+      const company = dbRef.current.companies.find((c) => c.id === input.companyId)?.name ?? "client";
+      setDb((d) =>
+        withLog({ ...d, contracts: [...d.contracts, rec] }, "company", `${rec.documentType} added for ${company}`)
+      );
+      pushRecord("Contracts", rec, rec.documentType);
+      return rec.id;
+    },
+    [pushRecord]
+  );
+
+  const updateContract = useCallback(
+    (id: string, input: ContractInput) => {
+      let rec: Contract | null = null;
+      setDb((d) => {
+        const contracts = d.contracts.map((ct) =>
+          ct.id === id ? ((rec = { ...ct, ...input, updatedAt: Date.now() }), rec) : ct
+        );
+        return withLog({ ...d, contracts }, "company", `${input.documentType} updated`);
+      });
+      if (rec) pushRecord("Contracts", rec, input.documentType);
+    },
+    [pushRecord]
+  );
+
+  const deleteContract = useCallback(
+    (id: string) => {
+      const d = dbRef.current;
+      const ct = d.contracts.find((c) => c.id === id);
+      const next: DB = { ...d, contracts: d.contracts.filter((c) => c.id !== id) };
+      setDb(withLog(next, "company", `${ct?.documentType ?? "Contract"} removed`));
+      pushRemove("Contracts", id, "The deletion");
+    },
+    [pushRemove]
+  );
+
   /* ---------------- google sheets connection ---------------- */
 
   const performMerge = useCallback(async (url: string, announce: boolean) => {
@@ -420,6 +476,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       companies: mergeById(local.companies, remote.companies),
       positions: mergeById(local.positions, remote.positions),
       candidates: mergeById(local.candidates, remote.candidates),
+      contracts: mergeById(local.contracts, remote.contracts),
       activity: local.activity,
     };
     await api.replaceAll(url, merged);
@@ -496,6 +553,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const companiesById = useMemo(() => new Map(db.companies.map((c) => [c.id, c])), [db.companies]);
   const positionsById = useMemo(() => new Map(db.positions.map((p) => [p.id, p])), [db.positions]);
+  const contractsByCompany = useMemo(() => {
+    const map = new Map<string, Contract[]>();
+    db.contracts.forEach((ct) => {
+      const arr = map.get(ct.companyId) ?? [];
+      arr.push(ct);
+      map.set(ct.companyId, arr);
+    });
+    return map;
+  }, [db.contracts]);
 
   const value: StoreValue = {
     db,
@@ -505,6 +571,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     confirm,
     companiesById,
     positionsById,
+    contractsByCompany,
     toast,
     dismissToast,
     askConfirm,
@@ -520,6 +587,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     updateCandidate,
     setCandidateStage,
     deleteCandidate,
+    addContract,
+    updateContract,
+    deleteContract,
     connect,
     disconnect,
     syncNow,
