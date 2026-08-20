@@ -1,13 +1,4 @@
 ```
 # Build artifacts
 dist/
-build/
-*.js
-*.css
-
-# Dependencies
-node_modules/
-
-# Package lock
-.package-lock.json
 ```
