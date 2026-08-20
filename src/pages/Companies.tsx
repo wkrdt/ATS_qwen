@@ -441,7 +441,7 @@ export function CompaniesPage() {
                     {contract ? (
                       <span className="flex items-center gap-1.5 text-[10.5px] font-mono text-moss-700 min-w-0">
                         <IconFile size={12} className="shrink-0" />
-                        <span className="truncate">{contract.fileName || "contract.pdf"}</span>
+                        <span className="truncate">{contract.documentType || "contract.pdf"}</span>
                       </span>
                     ) : (
                       <span className="text-[10.5px] text-hono-600 font-semibold flex items-center gap-1">
