@@ -11,11 +11,13 @@ export const APPS_SCRIPT_CODE = String.raw`/**
  */
 
 var SHEET_COLUMNS = {
-  Companies:  ['id', 'name', 'address', 'contact', 'website', 'createdAt', 'updatedAt'],
+  Companies:  ['id', 'name', 'address', 'contact', 'contactEmail', 'contactPhone', 'website', 'createdAt', 'updatedAt'],
   Positions:  ['id', 'companyId', 'title', 'type', 'status', 'salary',
                'openedAt', 'createdAt', 'updatedAt'],
   Candidates: ['id', 'name', 'email', 'phone', 'positionId', 'stage',
-               'source', 'note', 'createdAt', 'updatedAt']
+               'source', 'note', 'createdAt', 'updatedAt'],
+  Contracts:  ['id', 'companyId', 'documentType', 'startDate', 'endDate',
+               'documentUrl', 'notes', 'createdAt', 'updatedAt']
 };
 
 function getSheet_(name) {
@@ -99,6 +101,7 @@ function doGet(e) {
       ok: true,
       data: {
         Companies: readAll_('Companies'),
+        Contracts: readAll_('Contracts'),
         Positions: readAll_('Positions'),
         Candidates: readAll_('Candidates')
       }
@@ -114,6 +117,7 @@ function doPost(e) {
       writeAll_('Companies', body.data.Companies || []);
       writeAll_('Positions', body.data.Positions || []);
       writeAll_('Candidates', body.data.Candidates || []);
+      writeAll_('Contracts', body.data.Contracts || []);
       return json_({ ok: true });
     }
     if (body.action === 'upsert') {
