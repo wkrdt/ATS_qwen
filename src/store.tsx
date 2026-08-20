@@ -121,6 +121,7 @@ function loadDb(): DB {
       Array.isArray(parsed.companies) &&
       Array.isArray(parsed.positions) &&
       Array.isArray(parsed.candidates) &&
+      Array.isArray(parsed.contracts) &&
       Array.isArray(parsed.activity)
     )
       return parsed;
