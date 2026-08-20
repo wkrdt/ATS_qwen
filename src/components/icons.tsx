@@ -40,6 +40,17 @@ export const IconBuilding = make(
   </>
 );
 
+export const IconBuilding2 = make(
+  <>
+    <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
+    <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
+    <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" />
+    <path d="M10 6h4" />
+    <path d="M10 10h4" />
+    <path d="M10 14h4" />
+  </>
+);
+
 export const IconBriefcase = make(
   <>
     <rect x="2" y="7" width="20" height="14" rx="2" />
@@ -250,6 +261,13 @@ export const IconLock = make(
   <>
     <rect x="3" y="11" width="18" height="11" rx="2" />
     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </>
+);
+
+export const IconClock = make(
+  <>
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 6v6l4 2" />
   </>
 );
 
