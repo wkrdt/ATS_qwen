@@ -229,6 +229,12 @@ export function CompaniesPage() {
   }, [db.companies, query, sort]);
 
   // Generate display codes like CLI-001 based on original index
+  const generateCompanyId = (name: string, index: number): string => {
+    const parts = name.split(" ").filter((w) => w.length > 2);
+    const prefix = parts.length > 0 ? parts[0].slice(0, 3).toUpperCase() : "CLI";
+    return `${prefix}-${String(index + 1).padStart(3, "0")}`;
+  };
+
   const companyCodes = useMemo(() => {
     const map = new Map<string, string>();
     db.companies.forEach((c, i) => {
@@ -285,12 +291,6 @@ export function CompaniesPage() {
     const total = positions.length;
     const open = positions.filter((p) => p.status === "Open").length;
     return { total, open };
-  };
-
-  const generateCompanyId = (name: string, index: number): string => {
-    const parts = name.split(" ").filter((w) => w.length > 2);
-    const prefix = parts.length > 0 ? parts[0].slice(0, 3).toUpperCase() : "CLI";
-    return `${prefix}-${String(index + 1).padStart(3, "0")}`;
   };
 
   // Placeholder function for contract upload/replace
