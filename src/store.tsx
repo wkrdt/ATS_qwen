@@ -8,10 +8,10 @@ import React, {
   useState,
 } from "react";
 import type { ActivityKind, Candidate, Company, Contract, DB, Position, Settings, Stage } from "./types";
-import { EMPTY_DB, buildSeed } from "./data/seed";
 import { mergeById, uid } from "./lib/utils";
 import * as api from "./lib/api";
 import type { SheetName } from "./lib/api";
+import type { CompanyInput, PositionInput, CandidateInput, ContractInput } from "./store";
 
 const LS_DB = "talentledger.db.v1";
 const LS_SETTINGS = "talentledger.settings.v1";
