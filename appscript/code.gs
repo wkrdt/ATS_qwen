@@ -1,18 +1,29 @@
 /**
  * TalentLedger — Google Sheets backend
- * Sheets used: Companies, Positions, Candidates (auto-created on first run)
+ * Sheets used: Companies, Positions, Candidates, SourcingResources, AuditLog (auto-created on first run)
  * Deploy: Deploy > New deployment > Web app
  *   Execute as: Me · Who has access: Anyone
  */
 
 var SHEET_COLUMNS = {
-  Companies:  ['id', 'name', 'address', 'contact', 'contactEmail', 'contactPhone', 'website', 'createdAt', 'updatedAt'],
-  Positions:  ['id', 'companyId', 'title', 'type', 'status', 'salary',
+  Companies:  ['id', 'name', 'address', 'contact', 'contactEmail', 'contactPhone', 'website',
+               'picName', 'picPosition', 'picEmail', 'picPhoneWA',
+               'contractStart', 'contractEnd', 'contractStatus', 'contractFileName', 'contractDriveFileId', 'contractLocalCacheId',
+               'isActive', 'createdAt', 'updatedAt'],
+  Positions:  ['id', 'companyId', 'title', 'department', 'level', 'headcount', 'filledCount',
+               'minSalary', 'maxSalary', 'employmentType', 'workLocation', 'workArrangement',
+               'targetDate', 'hiringManagerName', 'hiringManagerEmail', 'jobDescription', 'requiredSkills', 'sourcingChannels',
+               'status', 'holdSince', 'phases', 'salary',
                'openedAt', 'createdAt', 'updatedAt'],
   Candidates: ['id', 'name', 'email', 'phone', 'positionId', 'stage',
                'source', 'note', 'createdAt', 'updatedAt'],
   Contracts:  ['id', 'companyId', 'documentType', 'startDate', 'endDate',
-               'documentUrl', 'notes', 'createdAt', 'updatedAt']
+               'documentUrl', 'notes', 'createdAt', 'updatedAt'],
+  SourcingResources: ['id', 'companyId', 'resourceName', 'resourceType', 'url',
+                      'accountUsername', 'credentialReference', 'accessStatus', 'notes',
+                      'createdAt', 'updatedAt'],
+  AuditLog: ['id', 'entityType', 'entityId', 'field', 'oldValue', 'newValue',
+             'actor', 'reason', 'timestamp']
 };
 
 function getSheet_(name) {

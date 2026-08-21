@@ -115,7 +115,7 @@ export function replaceAll(url: string, db: DB): Promise<Record<string, unknown>
   });
 }
 
-export type SheetName = "Companies" | "Positions" | "Candidates" | "Contracts";
+export type SheetName = "Companies" | "Positions" | "Candidates" | "Contracts" | "SourcingResources" | "AuditLog";
 
 export function upsert(url: string, sheet: SheetName, record: unknown): Promise<Record<string, unknown>> {
   return gsPost(url, { action: "upsert", sheet, record });

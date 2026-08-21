@@ -105,7 +105,9 @@ export function buildSeed(): DB {
     candidates,
     contracts,
     activity,
+    sourcingResources: [],
+    auditLog: [],
   };
 }
 
-export const EMPTY_DB: DB = { companies: [], positions: [], candidates: [], contracts: [], activity: [] };
+export const EMPTY_DB: DB = { companies: [], positions: [], candidates: [], contracts: [], activity: [], sourcingResources: [], auditLog: [] };
