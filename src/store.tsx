@@ -7,7 +7,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import type { ActivityKind, Candidate, Company, Contract, DB, Position, Settings, Stage, SourcingResource, RecruitmentPhase } from "./types";
+import type { ActivityKind, AuditLogEntry, Candidate, Company, Contract, DB, Position, Settings, Stage, SourcingResource, RecruitmentPhase, PositionStatus } from "./types";
+import { STATUS_TRANSITIONS } from "./types";
 import { mergeById, uid } from "./lib/utils";
 import * as api from "./lib/api";
 import type { SheetName } from "./lib/api";
@@ -145,6 +146,9 @@ interface StoreValue {
   addSourcingResource: (input: SourcingResourceInput) => string;
   updateSourcingResource: (id: string, input: Partial<SourcingResourceInput>) => void;
   deleteSourcingResource: (id: string) => void;
+
+  // Audit log actions
+  appendAuditLog: (entry: Omit<AuditLogEntry, "id">) => void;
 
   connect: (url: string) => Promise<string | null>;
   disconnect: () => void;
@@ -299,6 +303,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     activity: [{ id: uid("a"), kind, message, at: Date.now() }, ...d.activity].slice(0, MAX_ACTIVITY),
   });
 
+  /* ---------------- audit log ---------------- */
+
+  const appendAuditLog = useCallback((entry: Omit<AuditLogEntry, "id">) => {
+    const newEntry: AuditLogEntry = { id: uid("al"), ...entry };
+    setDb((d) => ({ ...d, auditLog: [newEntry, ...d.auditLog].slice(0, 200) }));
+    // Also push to sheet if connected
+    const s = settingsRef.current;
+    if (s.connected && s.sheetUrl) {
+      setSyncState("syncing");
+      api.upsert(s.sheetUrl, "AuditLog", newEntry).then(markSynced).catch(() => setSyncState("error"));
+    }
+  }, [markSynced]);
+
   /* ---------------- companies ---------------- */
 
   const addCompany = useCallback(
@@ -401,6 +418,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     (id: string, status: Position["status"], reason?: string) => {
       const existing = dbRef.current.positions.find((p) => p.id === id);
       if (!existing || existing.status === status) return;
+      
+      // Validate transition
+      const allowedTransitions = STATUS_TRANSITIONS[existing.status];
+      if (!allowedTransitions.includes(status)) {
+        toast("error", "Invalid status change", `Cannot move from ${existing.status} to ${status}.`);
+        return;
+      }
+      
       const updates: Partial<Position> = { status, updatedAt: Date.now() };
       // Set holdSince when moving to On Hold
       if (status === "On Hold") {
@@ -418,8 +443,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         )
       );
       pushRecord("Positions", rec, rec.title);
+      
+      // Append audit log entry
+      appendAuditLog({
+        entityType: "Position",
+        entityId: id,
+        field: "status",
+        oldValue: existing.status,
+        newValue: status,
+        actor: "user",
+        reason: reason || "",
+        timestamp: Date.now(),
+      });
     },
-    [pushRecord]
+    [pushRecord, toast, appendAuditLog]
   );
 
   const configurePositionPhases = useCallback(
@@ -427,6 +464,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const existing = dbRef.current.positions.find((p) => p.id === id);
       if (!existing) return;
       const rec: Position = { ...existing, phases, updatedAt: Date.now() };
+      
+      // Format phases as strings for audit log
+      const formatPhases = (ph: RecruitmentPhase[]) => ph.map(p => `${p.code}${p.required ? '(req)' : ''}`).join(' → ');
+      const oldFlowStr = formatPhases(existing.phases);
+      const newFlowStr = formatPhases(phases);
+      
       setDb((d) =>
         withLog(
           { ...d, positions: d.positions.map((p) => (p.id === id ? rec : p)) },
@@ -435,8 +478,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         )
       );
       pushRecord("Positions", rec, rec.title);
+      
+      // Append audit log entry
+      appendAuditLog({
+        entityType: "Position",
+        entityId: id,
+        field: "phases",
+        oldValue: oldFlowStr,
+        newValue: newFlowStr,
+        actor: "user",
+        reason: reason || "",
+        timestamp: Date.now(),
+      });
     },
-    [pushRecord]
+    [pushRecord, appendAuditLog]
   );
 
   const deletePosition = useCallback(
@@ -695,6 +750,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addSourcingResource: () => "", // placeholder - implement when needed
     updateSourcingResource: () => {}, // placeholder
     deleteSourcingResource: () => {}, // placeholder
+    appendAuditLog,
     connect,
     disconnect,
     syncNow,

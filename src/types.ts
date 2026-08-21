@@ -24,6 +24,19 @@ export interface Company {
   updatedAt: number;
 }
 
+// Audit log entry for tracking changes
+export interface AuditLogEntry {
+  id: string;
+  entityType: "Position" | "Company" | "Candidate";
+  entityId: string;
+  field: string;
+  oldValue: string;
+  newValue: string;
+  actor: string;
+  reason: string;
+  timestamp: number;
+}
+
 // Sourcing resource for a company (stored in separate sheet)
 export interface SourcingResource {
   id: string;
@@ -98,6 +111,14 @@ export interface Position {
   updatedAt: number;
 }
 
+// Allowed status transitions matrix
+export const STATUS_TRANSITIONS: Record<PositionStatus, PositionStatus[]> = {
+  Open: ["On Hold", "Filled", "Cancelled"],
+  "On Hold": ["Open", "Cancelled"],
+  Filled: ["Open"],
+  Cancelled: ["Open"],
+};
+
 export type Stage = "Sourced" | "Screened" | "Interview" | "Offer" | "Placed" | "Rejected";
 
 export interface Candidate {
@@ -129,6 +150,7 @@ export interface DB {
   contracts: Contract[];
   sourcingResources: SourcingResource[];
   activity: Activity[];
+  auditLog: AuditLogEntry[];
 }
 
 export interface Settings {
